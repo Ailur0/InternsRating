@@ -28,12 +28,15 @@ import { getCurrentUser, logout } from "@/lib/auth";
 import { Button } from "@/components/ui/button";
 import { toast } from "sonner";
 
-const menuItems = [
+const baseMenu = [
   {
     title: "Dashboard",
     url: "/dashboard",
     icon: LayoutDashboard,
   },
+];
+
+const adminMenu = [
   {
     title: "Interns",
     url: "/dashboard/interns",
@@ -86,9 +89,75 @@ const menuItems = [
   },
 ];
 
+const directorMenu = [
+  {
+    title: "Interns",
+    url: "/dashboard/interns",
+    icon: Users,
+  },
+  {
+    title: "Ratings",
+    url: "/dashboard/ratings",
+    icon: Star,
+  },
+  {
+    title: "Analytics",
+    url: "/dashboard/analytics",
+    icon: BarChart3,
+  },
+  {
+    title: "Notifications",
+    url: "/dashboard/notifications",
+    icon: Bell,
+  },
+  {
+    title: "Reminders",
+    url: "/dashboard/reminders",
+    icon: Clock,
+  },
+];
+
+const managerMenu = [
+  {
+    title: "Interns",
+    url: "/dashboard/interns",
+    icon: Users,
+  },
+  {
+    title: "Ratings",
+    url: "/dashboard/ratings",
+    icon: Star,
+  },
+  {
+    title: "Submit Rating",
+    url: "/dashboard/ratings/submit",
+    icon: Star,
+  },
+  {
+    title: "Reminders",
+    url: "/dashboard/reminders",
+    icon: Clock,
+  },
+];
+
 export function AppSidebar() {
   const navigate = useNavigate();
   const user = getCurrentUser();
+
+  const menuItems = (() => {
+    if (!user) return baseMenu;
+
+    switch (user.role) {
+      case "admin":
+        return [...baseMenu, ...adminMenu];
+      case "director":
+        return [...baseMenu, ...directorMenu];
+      case "manager":
+        return [...baseMenu, ...managerMenu];
+      default:
+        return baseMenu;
+    }
+  })();
 
   const handleLogout = () => {
     logout();
