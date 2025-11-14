@@ -4,15 +4,75 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star } from "lucide-react";
+import { Star, ShieldCheck, Building2, ClipboardList } from "lucide-react";
+import type { LucideIcon } from "lucide-react";
 import { login } from "@/lib/auth";
 import { toast } from "sonner";
+
+type LoginRoleOption = {
+  key: "admin" | "director" | "manager";
+  label: string;
+  description: string;
+  email: string;
+  password: string;
+  icon: LucideIcon;
+  accentText: string;
+  badgeBg: string;
+  ringClass: string;
+  activeBg: string;
+};
+
+const roleOptions: LoginRoleOption[] = [
+  {
+    key: "admin",
+    label: "Administrator",
+    description: "Configure the platform and view organization-wide performance.",
+    email: "admin@company.com",
+    password: "admin123",
+    icon: ShieldCheck,
+    accentText: "text-sky-600",
+    badgeBg: "bg-sky-500/10",
+    ringClass: "ring-sky-400/70",
+    activeBg: "bg-sky-500/10",
+  },
+  {
+    key: "director",
+    label: "Director",
+    description: "Oversee departments, managers, and cross-team intern metrics.",
+    email: "director@company.com",
+    password: "director123",
+    icon: Building2,
+    accentText: "text-violet-600",
+    badgeBg: "bg-violet-500/10",
+    ringClass: "ring-violet-400/70",
+    activeBg: "bg-violet-500/10",
+  },
+  {
+    key: "manager",
+    label: "Manager",
+    description: "Review intern progress, add feedback, and manage daily workflows.",
+    email: "manager@company.com",
+    password: "manager123",
+    icon: ClipboardList,
+    accentText: "text-emerald-600",
+    badgeBg: "bg-emerald-500/10",
+    ringClass: "ring-emerald-400/70",
+    activeBg: "bg-emerald-500/10",
+  },
+];
 
 const Login = () => {
   const navigate = useNavigate();
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
+  const [selectedRole, setSelectedRole] = useState<LoginRoleOption | null>(null);
+
+  const handleRoleSelect = (role: LoginRoleOption) => {
+    setSelectedRole(role);
+    setEmail(role.email);
+    setPassword(role.password);
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -49,11 +109,48 @@ const Login = () => {
           <CardHeader className="space-y-1">
             <CardTitle className="text-2xl font-bold">Sign In</CardTitle>
             <CardDescription>
-              Enter your credentials to access your account
+              {selectedRole
+                ? `Quick-filled with the ${selectedRole.label} account. You can still edit the details below.`
+                : "Enter your credentials or choose a role card to autofill demo details."}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-2">
+                <Label>Login as</Label>
+                <div className="grid gap-3 sm:grid-cols-3">
+                  {roleOptions.map((role) => {
+                    const Icon = role.icon;
+                    const isActive = selectedRole?.key === role.key;
+                    const buttonClasses = `group rounded-xl border p-4 text-left transition-all ${
+                      isActive
+                        ? `${role.activeBg} border-transparent ring-2 ring-offset-2 ring-offset-background ${role.ringClass}`
+                        : "border-border/60 hover:border-foreground/40"
+                    }`;
+
+                    return (
+                      <button
+                        type="button"
+                        key={role.key}
+                        onClick={() => handleRoleSelect(role)}
+                        className={buttonClasses}
+                      >
+                        <div className={`flex items-center gap-2 text-sm font-semibold ${role.accentText}`}>
+                          <Icon className="h-4 w-4" />
+                          <span>{role.label}</span>
+                        </div>
+                        <p className="mt-2 text-xs text-muted-foreground leading-snug">
+                          {role.description}
+                        </p>
+                        <div className="mt-3 flex items-center gap-2 text-[11px] font-medium text-muted-foreground">
+                          <span className={`${role.badgeBg} ${role.accentText} px-2 py-1 rounded-full`}>Quick fill</span>
+                          {isActive && <span>Selected</span>}
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
+              </div>
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
@@ -86,14 +183,6 @@ const Login = () => {
               </Button>
             </form>
 
-            <div className="mt-6 p-4 bg-muted rounded-lg">
-              <p className="text-sm font-semibold text-foreground mb-2">Demo Credentials:</p>
-              <div className="space-y-1 text-xs text-muted-foreground">
-                <p><strong>Admin:</strong> admin@company.com / admin123</p>
-                <p><strong>Director:</strong> director@company.com / director123</p>
-                <p><strong>Manager:</strong> manager@company.com / manager123</p>
-              </div>
-            </div>
           </CardContent>
         </Card>
 
