@@ -1,9 +1,43 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { BarChart3, Users, Star, Shield, TrendingUp, Mail } from "lucide-react";
+import { mockInterns, mockRatings, mockUsers, mockRatingPeriods } from "@/lib/mockData";
 
 const Landing = () => {
   const navigate = useNavigate();
+
+  const activeInterns = mockInterns.filter((intern) => intern.status === "active");
+  const totalInterns = mockInterns.length;
+  const submittedRatings = mockRatings.filter((rating) => rating.status === "submitted");
+  const pendingReviews = Math.max(activeInterns.length - submittedRatings.length, 0);
+  const completionRate = totalInterns
+    ? Math.round((submittedRatings.length / totalInterns) * 100)
+    : 0;
+  const managerCount = mockUsers.filter((user) => user.role === "manager").length;
+  const directorCount = mockUsers.filter((user) => user.role === "director").length;
+  const activePeriod = mockRatingPeriods.find((period) => period.status === "active");
+  const upcomingPeriods = mockRatingPeriods.filter((period) => period.status === "upcoming").length;
+
+  const stats = [
+    {
+      title: "Active Interns",
+      value: activeInterns.length,
+      accent: "text-primary",
+      description: `${totalInterns} interns in the program`,
+    },
+    {
+      title: "Reviews Submitted",
+      value: submittedRatings.length,
+      accent: "text-accent",
+      description: activePeriod ? `Current period: ${activePeriod.name}` : "Current rating cycle",
+    },
+    {
+      title: "Completion Rate",
+      value: `${completionRate}%`,
+      accent: "text-info",
+      description: pendingReviews ? `${pendingReviews} reviews pending` : "All reviews in",
+    },
+  ];
 
   const features = [
     {
@@ -63,7 +97,7 @@ const Landing = () => {
             <span className="bg-gradient-primary bg-clip-text text-transparent"> Evaluation Process</span>
           </h1>
           <p className="text-xl text-muted-foreground max-w-2xl mx-auto">
-            A comprehensive platform for managing intern performance ratings, analytics, and automated workflows.
+            A comprehensive platform for managing {totalInterns}+ intern records, {managerCount} managers, and {directorCount} program directors with real performance data.
           </p>
           <div className="flex gap-4 justify-center pt-4">
             <Button size="lg" onClick={() => navigate('/login')} className="text-lg px-8">
@@ -76,19 +110,14 @@ const Landing = () => {
         </div>
 
         {/* Stats */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-3xl mx-auto mt-20">
-          <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
-            <div className="text-4xl font-bold text-primary">95%+</div>
-            <div className="text-muted-foreground mt-2">Rating Completion</div>
-          </div>
-          <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
-            <div className="text-4xl font-bold text-accent">80%</div>
-            <div className="text-muted-foreground mt-2">Time Saved</div>
-          </div>
-          <div className="bg-card rounded-xl p-6 shadow-soft border border-border">
-            <div className="text-4xl font-bold text-info">500+</div>
-            <div className="text-muted-foreground mt-2">Active Users</div>
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-4xl mx-auto mt-20">
+          {stats.map((stat) => (
+            <div key={stat.title} className="bg-card rounded-xl p-6 shadow-soft border border-border">
+              <div className={`text-4xl font-bold ${stat.accent}`}>{stat.value}</div>
+              <div className="text-muted-foreground mt-2">{stat.title}</div>
+              <p className="text-sm text-muted-foreground mt-1">{stat.description}</p>
+            </div>
+          ))}
         </div>
       </section>
 
@@ -127,7 +156,7 @@ const Landing = () => {
             Ready to Transform Your Evaluation Process?
           </h2>
           <p className="text-lg text-primary-foreground/90 mb-8 max-w-2xl mx-auto">
-            Join hundreds of organizations already using InternRate to streamline their intern management.
+            Join dozens of teams already tracking {totalInterns}+ interns, {managerCount} managers, and {upcomingPeriods} upcoming review cycles with InternRate.
           </p>
           <Button
             size="lg"
