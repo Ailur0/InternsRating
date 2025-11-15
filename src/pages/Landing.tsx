@@ -63,8 +63,8 @@ const Landing = () => {
             <Button size="lg" onClick={() => navigate('/login')} className="text-lg px-8">
               Get Started
             </Button>
-            <Button size="lg" variant="outline" className="text-lg px-8">
-              Learn More
+            <Button size="lg" variant="outline" className="text-lg px-8" onClick={() => navigate('/access-policy')}>
+              View Access Policy
             </Button>
           </div>
         </div>
@@ -104,7 +104,7 @@ const Landing = () => {
             <Button variant="secondary" onClick={() => navigate('/login')}>
               Proceed to Console
             </Button>
-            <Button variant="ghost" className="text-muted-foreground" onClick={() => navigate('/login')}>
+            <Button variant="ghost" className="text-muted-foreground" onClick={() => navigate('/access-policy')}>
               View Access Policy
             </Button>
           </div>

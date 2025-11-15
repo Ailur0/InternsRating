@@ -21,6 +21,7 @@ import Notifications from "./pages/Notifications";
 import CompareInterns from "./pages/CompareInterns";
 import ImportInterns from "./pages/ImportInterns";
 import Reminders from "./pages/Reminders";
+import AccessPolicy from "./pages/AccessPolicy";
 
 const queryClient = new QueryClient();
 
@@ -33,6 +34,7 @@ const App = () => (
         <Routes>
           <Route path="/" element={<Landing />} />
           <Route path="/login" element={<Login />} />
+          <Route path="/access-policy" element={<AccessPolicy />} />
           <Route
             path="/dashboard"
             element={
