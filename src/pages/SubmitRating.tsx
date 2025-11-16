@@ -1,11 +1,12 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Star, ArrowLeft, Save } from "lucide-react";
+import { Input } from "@/components/ui/input";
+import { Star, ArrowLeft, Save, Plus, Trash2 } from "lucide-react";
 import { mockInterns, mockRatingPeriods } from "@/lib/mockData";
 import { toast } from "sonner";
 import { Progress } from "@/components/ui/progress";
@@ -15,7 +16,16 @@ import { getCurrentUser } from "@/lib/auth";
 import { FileUpload } from "@/components/FileUpload";
 import { getFile, AttachedFile } from "@/lib/fileStorage";
 
-const ratingCategories = [
+type RatingCategory = {
+  key: string;
+  label: string;
+  description: string;
+  isCustom?: boolean;
+};
+
+const CUSTOM_CATEGORY_KEY = "customRatingCategories";
+
+const defaultRatingCategories: RatingCategory[] = [
   { key: 'technicalSkills', label: 'Technical Skills', description: 'Proficiency in required technical competencies' },
   { key: 'communication', label: 'Communication', description: 'Written and verbal communication effectiveness' },
   { key: 'teamwork', label: 'Teamwork & Collaboration', description: 'Ability to work effectively with others' },
@@ -25,6 +35,42 @@ const ratingCategories = [
   { key: 'qualityOfWork', label: 'Quality of Work', description: 'Accuracy, thoroughness, and attention to detail' },
   { key: 'learningAgility', label: 'Learning Agility', description: 'Speed and effectiveness of learning new skills' },
 ];
+
+const loadCustomCategories = (): RatingCategory[] => {
+  try {
+    const stored = localStorage.getItem(CUSTOM_CATEGORY_KEY);
+    if (!stored) return [];
+    const parsed = JSON.parse(stored) as RatingCategory[];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const persistCustomCategories = (categories: RatingCategory[]) => {
+  localStorage.setItem(CUSTOM_CATEGORY_KEY, JSON.stringify(categories));
+};
+
+const buildCategoryKey = (label: string, existingKeys: string[]) => {
+  const base = label
+    .trim()
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, " ")
+    .split(" ")
+    .filter(Boolean)
+    .map((word, index) => (index === 0 ? word : word.charAt(0).toUpperCase() + word.slice(1)))
+    .join("") || `custom${Date.now()}`;
+
+  if (!existingKeys.includes(base)) return base;
+
+  let suffix = 1;
+  let key = `${base}${suffix}`;
+  while (existingKeys.includes(key)) {
+    suffix += 1;
+    key = `${base}${suffix}`;
+  }
+  return key;
+};
 
 const SubmitRating = () => {
   const navigate = useNavigate();
@@ -37,9 +83,17 @@ const SubmitRating = () => {
   const [comments, setComments] = useState("");
   const [hoveredRating, setHoveredRating] = useState<{ [key: string]: number }>({});
   const [attachedFiles, setAttachedFiles] = useState<AttachedFile[]>([]);
+  const [customCategories, setCustomCategories] = useState<RatingCategory[]>(() => loadCustomCategories());
+  const [newCategoryLabel, setNewCategoryLabel] = useState("");
+  const [newCategoryDescription, setNewCategoryDescription] = useState("");
 
   const activeInterns = mockInterns.filter(i => i.status === 'active');
   const activePeriods = mockRatingPeriods.filter(p => p.status === 'active' || p.status === 'upcoming');
+  const ratingCategories = useMemo(() => [...defaultRatingCategories, ...customCategories], [customCategories]);
+
+  useEffect(() => {
+    persistCustomCategories(customCategories);
+  }, [customCategories]);
 
   // Load draft when intern and period are selected
   useEffect(() => {
@@ -66,7 +120,7 @@ const SubmitRating = () => {
 
   const calculateProgress = () => {
     let completed = 0;
-    let total = 10; // 2 selects + 8 categories
+    const total = 2 + ratingCategories.length;
     
     if (selectedIntern) completed++;
     if (selectedPeriod) completed++;
@@ -138,6 +192,43 @@ const SubmitRating = () => {
       toast.success("Rating submitted successfully!");
       setTimeout(() => navigate('/dashboard/ratings'), 1500);
     }
+  };
+
+  const handleAddCategory = () => {
+    const trimmedLabel = newCategoryLabel.trim();
+    if (!trimmedLabel) {
+      toast.error("Please provide a category name");
+      return;
+    }
+
+    const existingLabels = ratingCategories.map((cat) => cat.label.toLowerCase());
+    if (existingLabels.includes(trimmedLabel.toLowerCase())) {
+      toast.error("That category already exists");
+      return;
+    }
+
+    const existingKeys = ratingCategories.map((cat) => cat.key);
+    const key = buildCategoryKey(trimmedLabel, existingKeys);
+
+    const category: RatingCategory = {
+      key,
+      label: trimmedLabel,
+      description: newCategoryDescription.trim() || "Custom performance metric",
+      isCustom: true,
+    };
+
+    setCustomCategories((prev) => [...prev, category]);
+    setNewCategoryLabel("");
+    setNewCategoryDescription("");
+    toast.success("Category added");
+  };
+
+  const handleRemoveCategory = (key: string) => {
+    setCustomCategories((prev) => prev.filter((cat) => cat.key !== key));
+    setRatings((prev) => {
+      const { [key]: _removed, ...rest } = prev;
+      return rest;
+    });
   };
 
   const renderStars = (category: string) => {
@@ -248,9 +339,78 @@ const SubmitRating = () => {
       <Card className="shadow-soft border-border">
         <CardHeader>
           <CardTitle>Performance Categories</CardTitle>
-          <CardDescription>Rate each category on a scale of 1-5 stars</CardDescription>
+          <CardDescription>
+            Rate each category on a scale of 1-5 stars. Add custom categories to tailor evaluations.
+          </CardDescription>
         </CardHeader>
         <CardContent className="space-y-6">
+          <div className="space-y-4 rounded-lg border border-dashed border-border bg-muted/30 p-4">
+            <div className="space-y-1">
+              <p className="text-sm font-medium text-foreground">Add custom categories</p>
+              <p className="text-xs text-muted-foreground">Capture role-specific competencies your intern is evaluated on.</p>
+            </div>
+            <div className="grid gap-4 md:grid-cols-2">
+              <div className="space-y-2">
+                <Label htmlFor="new-category-label">Category title</Label>
+                <Input
+                  id="new-category-label"
+                  placeholder="e.g. Client Communication"
+                  value={newCategoryLabel}
+                  onChange={(e) => setNewCategoryLabel(e.target.value)}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="new-category-description">Description</Label>
+                <Textarea
+                  id="new-category-description"
+                  placeholder="Describe what success looks like"
+                  value={newCategoryDescription}
+                  onChange={(e) => setNewCategoryDescription(e.target.value)}
+                  rows={2}
+                />
+              </div>
+            </div>
+            <div className="flex flex-col gap-2">
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                className="w-fit gap-2"
+                onClick={handleAddCategory}
+                disabled={!newCategoryLabel.trim()}
+              >
+                <Plus className="h-4 w-4" />
+                Add Category
+              </Button>
+              {customCategories.length > 0 && (
+                <div className="space-y-2">
+                  <p className="text-xs font-medium uppercase text-muted-foreground">Custom categories</p>
+                  <div className="space-y-2">
+                    {customCategories.map((category) => (
+                      <div
+                        key={category.key}
+                        className="flex items-start justify-between rounded-md border border-border bg-background p-3"
+                      >
+                        <div>
+                          <p className="text-sm font-semibold text-foreground">{category.label}</p>
+                          <p className="text-xs text-muted-foreground">{category.description}</p>
+                        </div>
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="icon"
+                          className="text-destructive"
+                          onClick={() => handleRemoveCategory(category.key)}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
           {ratingCategories.map((category) => (
             <div key={category.key} className="space-y-3 pb-6 border-b border-border last:border-0">
               <div>
