@@ -1,11 +1,10 @@
-import { NavLink, useNavigate } from "react-router-dom";
+import { NavLink } from "react-router-dom";
 import {
   LayoutDashboard,
   Users,
   Star,
   BarChart3,
   Settings,
-  LogOut,
   Calendar,
   FileText,
   Bell,
@@ -24,9 +23,7 @@ import {
   SidebarMenuItem,
   SidebarFooter,
 } from "@/components/ui/sidebar";
-import { getCurrentUser, logout } from "@/lib/auth";
-import { Button } from "@/components/ui/button";
-import { toast } from "sonner";
+import { getCurrentUser } from "@/lib/auth";
 
 const baseMenu = [
   {
@@ -141,7 +138,6 @@ const managerMenu = [
 ];
 
 export function AppSidebar() {
-  const navigate = useNavigate();
   const user = getCurrentUser();
 
   const menuItems = (() => {
@@ -158,12 +154,6 @@ export function AppSidebar() {
         return baseMenu;
     }
   })();
-
-  const handleLogout = () => {
-    logout();
-    toast.success("Logged out successfully");
-    navigate("/login");
-  };
 
   return (
     <Sidebar className="border-r border-sidebar-border">
@@ -208,20 +198,10 @@ export function AppSidebar() {
       </SidebarContent>
 
       <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="space-y-3">
-          <div className="px-2">
-            <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
-            <p className="text-xs text-muted-foreground">{user?.email}</p>
-            <p className="text-xs text-primary font-medium capitalize mt-1">{user?.role}</p>
-          </div>
-          <Button
-            variant="outline"
-            className="w-full justify-start"
-            onClick={handleLogout}
-          >
-            <LogOut className="w-4 h-4 mr-2" />
-            Logout
-          </Button>
+        <div className="space-y-3 px-2">
+          <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
+          <p className="text-xs text-muted-foreground">{user?.email}</p>
+          <p className="text-xs text-primary font-medium capitalize mt-1">{user?.role}</p>
         </div>
       </SidebarFooter>
     </Sidebar>
