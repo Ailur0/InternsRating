@@ -21,7 +21,6 @@ import {
   SidebarMenu,
   SidebarMenuButton,
   SidebarMenuItem,
-  SidebarFooter,
 } from "@/components/ui/sidebar";
 import { getCurrentUser } from "@/lib/auth";
 
@@ -196,14 +195,6 @@ export function AppSidebar() {
           </SidebarGroupContent>
         </SidebarGroup>
       </SidebarContent>
-
-      <SidebarFooter className="p-4 border-t border-sidebar-border">
-        <div className="space-y-3 px-2">
-          <p className="text-sm font-medium text-sidebar-foreground">{user?.name}</p>
-          <p className="text-xs text-muted-foreground">{user?.email}</p>
-          <p className="text-xs text-primary font-medium capitalize mt-1">{user?.role}</p>
-        </div>
-      </SidebarFooter>
     </Sidebar>
   );
 }
