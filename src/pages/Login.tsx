@@ -4,7 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Star, ShieldCheck, Building2, ClipboardList } from "lucide-react";
+import { ArrowLeft, ShieldCheck, Building2, ClipboardList } from "lucide-react";
 import type { LucideIcon } from "lucide-react";
 import { login } from "@/lib/auth";
 import { toast } from "sonner";
@@ -96,7 +96,16 @@ const Login = () => {
 
   return (
     <div className="min-h-screen bg-gradient-subtle flex items-center justify-center p-6">
-      <div className="w-full max-w-md">
+      <div className="w-full max-w-md space-y-6">
+        <Button
+          variant="ghost"
+          size="icon"
+          className="text-muted-foreground"
+          onClick={() => navigate('/')}
+        >
+          <ArrowLeft className="h-5 w-5" />
+          <span className="sr-only">Back to home</span>
+        </Button>
 
         <Card className="shadow-medium border-border">
           <CardHeader className="space-y-1">
@@ -178,16 +187,6 @@ const Login = () => {
 
           </CardContent>
         </Card>
-
-        <div className="text-center mt-6">
-          <Button
-            variant="ghost"
-            onClick={() => navigate('/')}
-            className="text-muted-foreground"
-          >
-            Back to Home
-          </Button>
-        </div>
       </div>
     </div>
   );
