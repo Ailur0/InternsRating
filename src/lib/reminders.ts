@@ -1,4 +1,5 @@
 import { addNotification } from './notifications';
+import { mockUsers } from './mockData';
 
 export interface Reminder {
   id: string;
@@ -30,8 +31,27 @@ export const addReminder = (reminder: Omit<Reminder, 'id' | 'createdAt' | 'compl
   
   reminders.push(newReminder);
   localStorage.setItem(STORAGE_KEY, JSON.stringify(reminders));
+
+  notifyManagersAndDirectors(newReminder);
   
   return newReminder;
+};
+
+const notifyManagersAndDirectors = (reminder: Reminder) => {
+  const stakeholders = mockUsers.filter((user) => user.role === 'manager' || user.role === 'director');
+  if (stakeholders.length === 0) return;
+
+  const dueDate = reminder.dueDate ? new Date(reminder.dueDate).toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : 'soon';
+  const baseMessage = reminder.message || 'Please review the reminder details.';
+
+  stakeholders.forEach((user) => {
+    addNotification({
+      type: 'info',
+      title: `Reminder Scheduled: ${reminder.title}`,
+      message: `${baseMessage} (Due ${dueDate}) — assigned by Admin for managers & directors.`,
+      actionUrl: reminder.internId ? `/dashboard/interns/${reminder.internId}` : '/dashboard/reminders',
+    });
+  });
 };
 
 export const completeReminder = (id: string): void => {
